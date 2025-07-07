@@ -72,27 +72,37 @@ table1_final <- tbl_summary(
 
 table1_final
 
-#Mini-project
+
+# Full solution for the Day 18 Mini-Project
+
 table1_project <- tbl_summary(
   table1_data,
   by = trt,
+  
+  # --- THE FIX IS HERE ---
+  # We must tell gtsummary that we want to treat continuous variables
+  # with a special multi-line summary type.
+  type = list(all_continuous() ~ "continuous2"),
+  
   label = list(age ~ "Patient Age", marker ~ "Marker Level (ng/mL)"),
   
-  # The 'statistic' argument is where we specify the exact stats to show
   statistic = list(
-    all_continuous() ~ c("{N_nonmiss}", # N non-missing
-                        "{mean} ({sd})"
-                        )
-    all_categorical() ~ "{n} / {N} ({p}%)" # Show n, N, and percent
+    # This multi-line statistic specification is now valid
+    # because of the 'type' argument above.
+    all_continuous() ~ c("{N_nonmiss}",
+                         "{mean} ({sd})",
+                         "{median}",
+                         "{min}, {max}"),
+    all_categorical() ~ "{n} / {N} ({p}%)"
   ),
   
-  # The 'digits' argument controls decimal places
   digits = list(
-    all_continuous() ~ 1 # Show 1 decimal place for continuous variables
+    all_continuous() ~ 1
   )
 ) |>
+  add_overall() |> # Moved before add_p() which is common practice
   add_p() |>
-  modify_header(label ~ "**Characteristic**") |>
-  add_overall() # Add a "Total" column, just like our shell!
+  modify_header(label ~ "**Characteristic**")
 
+# View the final, correct table
 table1_project
