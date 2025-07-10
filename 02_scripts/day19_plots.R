@@ -46,25 +46,41 @@ library(tidyverse)
 library(survminer)
 
 # The final, publication-quality plot
-p_km_final <- ggsurvfit(km_fit_sex, size = 1) + # Make survival lines thicker
-  add_confidence_interval() +
-  add_risk_table(
-    risk.table.title = "Number of patients at risk",
-    risk.table.y.text = FALSE, # Remove the y-axis tick labels on the risk table
-    size = 4 # Font size for risk table
-  ) +
-  scale_color_manual(values = c("Male" = "#0072B2", "Female" = "#D55E00")) + # Custom, colorblind-friendly colors
-  scale_y_continuous(labels = scales::percent, limits = c(0, 1)) + # Format y-axis as percentage
-  labs(
-    title = "Female Patients Show Significantly Improved Survival",
-    subtitle = "Kaplan-Meier estimate for the NCCTG Lung Cancer cohort",
-    x = "Time in Days",
-    y = "Overall Survival Probability"
-  ) +
-  theme_classic(base_size = 14) +
-  theme(
-    legend.title = element_blank(), # Remove the legend title
-    legend.position = "top" # Move legend to the top
+# --- Prepare Data (same as before) ---
+lung_clean <- lung |>
+  mutate(
+    status_event = if_else(status == 2, 1, 0),
+    sex_factor = factor(sex, levels = c(1, 2), labels = c("Male", "Female"))
   )
 
-p_km_final
+# --- Fit the model (same as before) ---
+km_fit_sex <- survfit(Surv(time, status_event) ~ sex_factor, data = lung_clean)
+
+
+# --- Create the plot using survminer's ggsurvplot() ---
+p_km_final <- ggsurvplot(
+  km_fit_sex,
+  data = lung_clean,
+  
+  # --- Plot Customization ---
+  pwal = TRUE,                      # Add log-rank p-value to the plot
+  conf.int = TRUE,                  # Add confidence intervals
+  risk.table = TRUE,                # Add the risk table
+  risk.table.col = "strata",        # Color the risk table rows by group
+  risk.table.y.text = FALSE,        # Don't show y-axis text on risk table
+  
+  # --- Aesthetics ---
+  palette = c("#0072B2", "#D55E00"), # Custom colors
+  size = 1,                         # Line size
+  
+  # --- Labels ---
+  title = "Female Patients Show Significantly Improved Survival",
+  subtitle = "Kaplan-Meier estimate for the NCCTG Lung Cancer cohort",
+  xlab = "Time in Days",
+  ylab = "Overall Survival Probability",
+  legend.title = "",                # Remove legend title
+  legend.labs = c("Male", "Female") # Set legend labels
+)
+
+# Print the plot object
+print(p_km_final)

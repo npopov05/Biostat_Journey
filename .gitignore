@@ -4,3 +4,5 @@
 .Ruserdata
 *.RData
 data/
+01_data/
+04_results/
